@@ -1,0 +1,29 @@
+{
+    "dependencies": [
+        {
+            "interfaces": "pallo\\application\\cache\\control\\CacheControl",
+            "class": "pallo\\application\\cache\\control\\ImageCacheControl",
+            "id": "image"
+        },
+        {
+            "interfaces": ["pallo\\library\\image\\ImageUrlGenerator", "pallo\\web\\image\\ImageUrlGenerator"],
+            "class": "pallo\\web\\image\\ImageUrlGenerator",
+            "id": "web",
+            "calls": [
+                {
+                    "method": "__construct",
+                    "arguments": [
+                        {
+                            "name": "baseUrl",
+                            "type": "call",
+                            "properties": {
+                                "interface": "pallo\\library\\mvc\\Request",
+                                "method": "getBaseUrl"
+                            }
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}
