@@ -2,7 +2,7 @@
     "name": "pallo/web-image",
     "description": "Image library integration for a Pallo web application",
     "license": "MIT",
-    "version": "0.1.1",
+    "version": "0.1.2",
     "authors": [
         {
             "name": "Joris Vandeweerd",
