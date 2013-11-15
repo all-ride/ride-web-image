@@ -89,7 +89,7 @@ class ImageUrlGenerator implements LibImageUrlGenerator {
         $fileSource = $this->fileBrowser->getFileSystem()->getFile($image);
 
         if (!$fileSource->isAbsolute()) {
-            // no absolute file, get the image from Zibo
+            // relative file, get the image from the file browser
             $fileSource = $this->fileBrowser->getPublicFile($image);
             if (!$fileSource) {
                 $fileSource = $this->fileBrowser->getFile($image);
@@ -100,28 +100,45 @@ class ImageUrlGenerator implements LibImageUrlGenerator {
             }
         }
 
-        $fileDestination = $this->getCacheFile($fileSource, $thumbnailer, $width, $height);
+        $publicDirectory = $this->fileBrowser->getPublicDirectory()->getAbsolutePath();
+        $useThumbnailer = $thumbnailer && ($width > 0 || $height > 0);
+        $isPublicFile = strpos($fileSource->getAbsolutePath(), $publicDirectory) === 0;
 
-        if (!$fileDestination->exists() || $fileSource->getModificationTime() > $fileDestination->getModificationTime()) {
-            if ($thumbnailer && ($width > 0 || $height > 0)) {
-                $thumbnailer = $this->dependencyInjector->get('pallo\\library\\image\\thumbnail\\Thumbnailer', $thumbnailer);
-                $imageIO = $this->dependencyInjector->get('pallo\\library\\image\\io\\ImageIO', $fileSource->getExtension());
+        if (!$useThumbnailer && $isPublicFile) {
+            // no processing needed, use source file since it's public
+            $fileDestination = $fileSource;
+        } else {
+            // processing needed
+            $fileDestination = $this->getCacheFile($fileSource, $thumbnailer, $width, $height);
 
-                $image = $imageIO->read($fileSource);
+            if (!$fileDestination->exists() || $fileSource->getModificationTime() > $fileDestination->getModificationTime()) {
+                // needed file does not exist or has been changed
+                if ($useThumbnailer) {
+                    $thumbnailer = $this->dependencyInjector->get('pallo\\library\\image\\thumbnail\\Thumbnailer', $thumbnailer);
+                    $imageFactory = $this->dependencyInjector->get('pallo\\library\\image\\io\\ImageFactory');
 
-                $thumbnail = $thumbnailer->getThumbnail($image, new Dimension($width, $height));
-                if ($image === $thumbnail) {
-                    $fileSource->copy($fileDestination);
+                    $image = $imageFactory->read($fileSource);
+
+                    $thumbnail = $thumbnailer->getThumbnail($image, new Dimension($width, $height));
+                    if ($image !== $thumbnail) {
+                        // thumbnail generated, write to cache file
+                        $imageFactory->write($fileDestination, $thumbnail);
+                    } elseif ($isPublicFile) {
+                        // no processing done and a public file, use source file since it's public
+                        $fileDestination = $fileSource;
+                    } else {
+                        // no processing done and a non-public file, copy to the cache file
+                        $fileSource->copy($fileDestination);
+                    }
                 } else {
-                    $imageIO->write($fileDestination, $thumbnail->getResource());
+                    // non-public file, copy to the cache file
+                    $fileSource->copy($fileDestination);
                 }
-            } else {
-                $fileSource->copy($fileDestination);
             }
         }
 
         // make the image relative to the public directory
-        $image = str_replace($this->fileBrowser->getPublicDirectory()->getPath(), '', $fileDestination->getPath());
+        $image = str_replace($publicDirectory, '', $fileDestination->getAbsolutePath());
 
         // return the full URL
         return $this->baseUrl . $image;
