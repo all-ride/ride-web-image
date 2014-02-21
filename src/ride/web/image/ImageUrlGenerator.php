@@ -1,13 +1,13 @@
 <?php
 
-namespace pallo\web\image;
+namespace ride\web\image;
 
-use pallo\library\dependency\DependencyInjector;
-use pallo\library\image\exception\ImageException;
-use pallo\library\image\Dimension;
-use pallo\library\image\ImageUrlGenerator as LibImageUrlGenerator;
-use pallo\library\system\file\browser\FileBrowser;
-use pallo\library\system\file\File;
+use ride\library\dependency\DependencyInjector;
+use ride\library\image\exception\ImageException;
+use ride\library\image\Dimension;
+use ride\library\image\ImageUrlGenerator as LibImageUrlGenerator;
+use ride\library\system\file\browser\FileBrowser;
+use ride\library\system\file\File;
 
 /**
  * URL generator for images.
@@ -22,13 +22,13 @@ class ImageUrlGenerator implements LibImageUrlGenerator {
 
     /**
      * Instance of the file browser
-     * @var pallo\library\system\file\browser\FileBrowser
+     * @var ride\library\system\file\browser\FileBrowser
      */
     private $fileBrowser;
 
     /**
      * Instance of the dependency injector
-     * @var pallo\library\dependency\DependencyInjector
+     * @var ride\library\dependency\DependencyInjector
      */
     private $dependencyInjector;
 
@@ -40,13 +40,13 @@ class ImageUrlGenerator implements LibImageUrlGenerator {
 
     /**
      * The path for the processed images
-     * @var pallo\library\filesystem\File
+     * @var ride\library\filesystem\File
      */
     private $path;
 
     /**
      * Constructs a image URL generator
-     * @param pallo\library\system\file\browser\FileBrowser $fileBrowser
+     * @param ride\library\system\file\browser\FileBrowser $fileBrowser
      * @param string $path Relative path in the public directory to save the
      * processed images
      * @return null
@@ -65,7 +65,7 @@ class ImageUrlGenerator implements LibImageUrlGenerator {
 
     /**
      * Gets the cache directory
-     * @return pallo\library\system\file\File
+     * @return ride\library\system\file\File
      */
     public function getCacheDirectory() {
         return $this->path;
@@ -114,8 +114,8 @@ class ImageUrlGenerator implements LibImageUrlGenerator {
             if (!$fileDestination->exists() || $fileSource->getModificationTime() > $fileDestination->getModificationTime()) {
                 // needed file does not exist or has been changed
                 if ($useThumbnailer) {
-                    $thumbnailer = $this->dependencyInjector->get('pallo\\library\\image\\thumbnail\\Thumbnailer', $thumbnailer);
-                    $imageFactory = $this->dependencyInjector->get('pallo\\library\\image\\io\\ImageFactory');
+                    $thumbnailer = $this->dependencyInjector->get('ride\\library\\image\\thumbnail\\Thumbnailer', $thumbnailer);
+                    $imageFactory = $this->dependencyInjector->get('ride\\library\\image\\io\\ImageFactory');
 
                     $image = $imageFactory->read($fileSource);
 
@@ -146,12 +146,12 @@ class ImageUrlGenerator implements LibImageUrlGenerator {
 
     /**
      * Gets the cache file for the image source
-     * @param pallo\library\system\file\File $source image source to get a
+     * @param ride\library\system\file\File $source image source to get a
      * cache file for
      * @param string $thumbnailer Name of the thumbnailer
      * @param integer $width The width of the cached image
      * @param integer $height The height of the cached image
-     * @return pallo\library\system\file\File unique name for a source file, in
+     * @return ride\library\system\file\File unique name for a source file, in
      * the cache directory, with the thumbnailer, width and height encoded into
      */
     private function getCacheFile(File $source, $thumbnailer = null, $width = 0, $height = 0) {
