@@ -56,11 +56,20 @@ class ImageUrlGenerator implements LibImageUrlGenerator {
         $this->dependencyInjector = $dependencyInjector;
         $this->baseUrl = $baseUrl;
 
+        $this->setPath($path);
+    }
+
+    /**
+     * Sets the path to save the processed images
+     * @param string $path Relative path in the public directory
+     * @return null
+     */
+    public function setPath($path) {
         if ($path == null) {
             $path = self::DEFAULT_PATH;
         }
 
-        $this->path = $fileBrowser->getPublicDirectory()->getChild($path);
+        $this->path = $this->fileBrowser->getPublicDirectory()->getChild($path);
     }
 
     /**
