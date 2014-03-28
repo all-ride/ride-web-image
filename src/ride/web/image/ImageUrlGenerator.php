@@ -22,13 +22,13 @@ class ImageUrlGenerator implements LibImageUrlGenerator {
 
     /**
      * Instance of the file browser
-     * @var ride\library\system\file\browser\FileBrowser
+     * @var \ride\library\system\file\browser\FileBrowser
      */
     private $fileBrowser;
 
     /**
      * Instance of the dependency injector
-     * @var ride\library\dependency\DependencyInjector
+     * @var \ride\library\dependency\DependencyInjector
      */
     private $dependencyInjector;
 
@@ -40,13 +40,13 @@ class ImageUrlGenerator implements LibImageUrlGenerator {
 
     /**
      * The path for the processed images
-     * @var ride\library\filesystem\File
+     * @var \ride\library\system\file\File
      */
     private $path;
 
     /**
      * Constructs a image URL generator
-     * @param ride\library\system\file\browser\FileBrowser $fileBrowser
+     * @param \ride\library\system\file\browser\FileBrowser $fileBrowser
      * @param string $path Relative path in the public directory to save the
      * processed images
      * @return null
@@ -74,7 +74,7 @@ class ImageUrlGenerator implements LibImageUrlGenerator {
 
     /**
      * Gets the cache directory
-     * @return ride\library\system\file\File
+     * @return \ride\library\system\file\File
      */
     public function getCacheDirectory() {
         return $this->path;
@@ -155,12 +155,12 @@ class ImageUrlGenerator implements LibImageUrlGenerator {
 
     /**
      * Gets the cache file for the image source
-     * @param ride\library\system\file\File $source image source to get a
+     * @param \ride\library\system\file\File $source image source to get a
      * cache file for
      * @param string $thumbnailer Name of the thumbnailer
      * @param integer $width The width of the cached image
      * @param integer $height The height of the cached image
-     * @return ride\library\system\file\File unique name for a source file, in
+     * @return \ride\library\system\file\File unique name for a source file, in
      * the cache directory, with the thumbnailer, width and height encoded into
      */
     private function getCacheFile(File $source, $thumbnailer = null, $width = 0, $height = 0) {
