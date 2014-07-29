@@ -5,7 +5,6 @@ namespace ride\web\image;
 use ride\library\dependency\DependencyInjector;
 use ride\library\http\Response;
 use ride\library\image\exception\ImageException;
-use ride\library\image\Dimension;
 use ride\library\image\ImageUrlGenerator as LibImageUrlGenerator;
 use ride\library\system\file\browser\FileBrowser;
 use ride\library\system\file\File;
@@ -89,20 +88,16 @@ class ImageUrlGenerator implements LibImageUrlGenerator {
     }
 
     /**
-     * Generates a URL for the provided image. Images will be cached in the
-     * public folder for fast access
-     * @param string $image Relative path of the image
-     * @param string $thumbnailer Name of the thumbnailer to use
-     * @param int $width Width for the thumbnailer
-     * @param int $height Height for the thumbnailer
+     * Generates a URL for the provided image.
+     * @param string|\ride\library\system\file\File $image Path or File instance to the image
+     * @param string $transformation Name of the transformation to use
+     * @param array $options Options for the transformation
      * @return null
      */
-    public function generateUrl($image, $thumbnailer = null, $width = 0, $height = 0) {
-        $useThumbnailer = $thumbnailer && ($width > 0 || $height > 0);
-
-        if (strlen($image) > 7 && substr($image, 0, 7) == 'http://' || substr($image, 0, 8) == 'https://') {
+    public function generateUrl($image, $transformation = null, array $options = null) {
+        if (is_string($image) && strlen($image) > 7 && substr($image, 0, 7) == 'http://' || substr($image, 0, 8) == 'https://') {
             // image is a URL
-            if (!$useThumbnailer) {
+            if (!$transformation) {
                 return $image;
             }
 
@@ -116,23 +111,23 @@ class ImageUrlGenerator implements LibImageUrlGenerator {
 
                 $file->write($response->getBody());
 
-                $this->applyThumbnailer($file, $thumbnailer, $width, $height);
+                $this->applyTransformation($file, $transformation, $options);
             }
         } else {
             // image is a local file
             $source = $this->lookupFile($image);
 
             $isPublicFile = strpos($source->getAbsolutePath(), $this->publicPath) === 0;
-            if (!$useThumbnailer && $isPublicFile) {
+            if (!$transformation && $isPublicFile) {
                 $file = $source;
             } else {
-                $file = $this->getCacheFile($source->getPath(), $thumbnailer, $width, $height);
+                $file = $this->getCacheFile($source->getPath(), $transformation, $options);
 
                 if (!$file->exists() || $source->getModificationTime() > $file->getModificationTime()) {
                     $source->copy($file);
 
-                    if ($useThumbnailer) {
-                        $this->applyThumbnailer($file, $thumbnailer, $width, $height);
+                    if ($transformation) {
+                        $this->applyTransformation($file, $transformation, $options);
                     }
                 }
             }
@@ -153,35 +148,36 @@ class ImageUrlGenerator implements LibImageUrlGenerator {
      * @param integer $height Height of the resulting image
      * @return null
      */
-    protected function applyThumbnailer(File $file, $thumbnailer, $width, $height) {
-        $thumbnailer = $this->dependencyInjector->get('ride\\library\\image\\thumbnail\\Thumbnailer', $thumbnailer);
-        $imageFactory = $this->dependencyInjector->get('ride\\library\\image\\io\\ImageFactory');
+    protected function applyTransformation(File $file, $transformation, array $options = null) {
+        $transformation = $this->dependencyInjector->get('ride\\library\\image\\transformation\\Transformation', $transformation);
+        $imageFactory = $this->dependencyInjector->get('ride\\library\\image\\ImageFactory');
 
-        $image = $imageFactory->read($file);
+        $image = $imageFactory->createImage();
+        $image->read($file);
 
-        $thumbnail = $thumbnailer->getThumbnail($image, new Dimension($width, $height));
-        if ($image !== $thumbnail) {
-            // thumbnail generated, write to cache file
-            $imageFactory->write($file, $thumbnail);
+        $transformedImage = $transformation->transform($image, $options);
+        if ($transformedImage !== $image) {
+            $transformedImage->write($file);
         }
     }
 
     /**
      * Gets the cache file for the image source
      * @param string $source Source to get a cache file for (local path or URL)
-     * @param string $thumbnailer Name of the thumbnailer
-     * @param integer $width The width of the cached image
-     * @param integer $height The height of the cached image
+     * @param string $transformation Name of the transformation
+     * @param array $options Options for the transformation
      * @return \ride\library\system\file\File unique name for a source file, in
      * the cache directory, with the thumbnailer, width and height encoded into
      */
-    protected function getCacheFile($source, $thumbnailer = null, $width = 0, $height = 0) {
-        $fileName = md5(
-            $source .
-            '-thumbnailer=' . $thumbnailer .
-            '-width=' . $width .
-            '-height=' . $height
-        );
+    protected function getCacheFile($source, $transformation = null, array $options = null) {
+        $hash = $source . '-transformation=' . $transformation;
+        if ($options) {
+            foreach ($options as $key => $value) {
+                $hash .= '-' . $key . '=' . $value;
+            }
+        }
+
+        $fileName = md5($hash);
 
         $positionSlash = strrpos($source, '/');
         if ($positionSlash !== false) {
@@ -203,6 +199,10 @@ class ImageUrlGenerator implements LibImageUrlGenerator {
      * not be found
      */
     protected function lookupFile($source) {
+        if ($source instanceof File) {
+            return $source;
+        }
+
         // image is a local file
         $file = $this->fileBrowser->getFileSystem()->getFile($source);
 

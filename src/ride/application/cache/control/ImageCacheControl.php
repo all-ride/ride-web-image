@@ -44,7 +44,7 @@ class ImageCacheControl extends AbstractCacheControl {
      */
     public function clear() {
         $directory = $this->imageUrlGenerator->getCacheDirectory();
-        if ($directory->exists()) {
+        if ($directory && $directory->exists()) {
             $directory->delete();
         }
     }
