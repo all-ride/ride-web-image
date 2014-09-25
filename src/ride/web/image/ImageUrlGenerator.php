@@ -101,7 +101,7 @@ class ImageUrlGenerator implements LibImageUrlGenerator {
                 return $image;
             }
 
-            $file = $this->getCacheFile($image, $thumbnailer, $width, $height);
+            $file = $this->getCacheFile($image, $transformation, $options);
             if (!$file->exists()) {
                 $httpClient = $this->dependencyInjector->get('ride\\library\\http\\client\\Client');
                 $response = $httpClient->get($image);
@@ -112,6 +112,7 @@ class ImageUrlGenerator implements LibImageUrlGenerator {
                 $file->write($response->getBody());
 
                 $this->applyTransformation($file, $transformation, $options);
+                $this->applyOptimization($file);
             }
         } else {
             // image is a local file
@@ -122,13 +123,14 @@ class ImageUrlGenerator implements LibImageUrlGenerator {
                 $file = $source;
             } else {
                 $file = $this->getCacheFile($source->getPath(), $transformation, $options);
-
                 if (!$file->exists() || $source->getModificationTime() > $file->getModificationTime()) {
                     $source->copy($file);
 
                     if ($transformation) {
                         $this->applyTransformation($file, $transformation, $options);
                     }
+
+                    $this->applyOptimization($file);
                 }
             }
         }
@@ -159,6 +161,16 @@ class ImageUrlGenerator implements LibImageUrlGenerator {
         if ($transformedImage !== $image) {
             $transformedImage->write($file);
         }
+    }
+
+    /**
+     * Applies image optimization to the provided file
+     * @param \ride\library\system\file\File $file
+     * @return null
+     */
+    protected function applyOptimization(File $file) {
+        $optimizer = $this->dependencyInjector->get('ride\\library\\image\\optimizer\\Optimizer');
+        $optimizer->optimize($file);
     }
 
     /**
