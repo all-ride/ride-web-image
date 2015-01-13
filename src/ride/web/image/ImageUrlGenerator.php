@@ -3,6 +3,7 @@
 namespace ride\web\image;
 
 use ride\library\dependency\DependencyInjector;
+use ride\library\http\Header;
 use ride\library\http\Response;
 use ride\library\image\exception\ImageException;
 use ride\library\image\ImageUrlGenerator as LibImageUrlGenerator;
@@ -104,7 +105,15 @@ class ImageUrlGenerator implements LibImageUrlGenerator {
             $file = $this->getCacheFile($image, $transformation, $options);
             if (!$file->exists()) {
                 $httpClient = $this->dependencyInjector->get('ride\\library\\http\\client\\Client');
+
                 $response = $httpClient->get($image);
+                if ($response->getStatusCode() != Response::STATUS_CODE_OK) {
+                    $location = $response->getHeader(Header::HEADER_LOCATION);
+                    if ($location) {
+                        $response = $httpClient->get($location);
+                    }
+                }
+
                 if ($response->getStatusCode() != Response::STATUS_CODE_OK) {
                     throw new ImageException('Could not generate URL for ' . $image . ': file not found');
                 }
