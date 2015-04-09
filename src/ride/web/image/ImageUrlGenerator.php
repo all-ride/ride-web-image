@@ -91,18 +91,21 @@ class ImageUrlGenerator implements LibImageUrlGenerator {
     /**
      * Generates a URL for the provided image.
      * @param string|\ride\library\system\file\File $image Path or File instance to the image
-     * @param string $transformation Name of the transformation to use
-     * @param array $options Options for the transformation
+     * @param string|array $transformations Name of a transformation or an array
+     * with the name of the transformation as key and the options as value
+     * @param array $options Options for the transformation (when name provided)
      * @return null
      */
-    public function generateUrl($image, $transformation = null, array $options = null) {
+    public function generateUrl($image, $transformations = null, array $options = null) {
         if (is_string($image) && strlen($image) > 7 && substr($image, 0, 7) == 'http://' || substr($image, 0, 8) == 'https://') {
             // image is a URL
-            if (!$transformation) {
+            if (!$transformations) {
                 return $image;
+            } elseif (!is_array($transformations)) {
+                $transformations = array($transformations => $options);
             }
 
-            $file = $this->getCacheFile($image, $transformation, $options);
+            $file = $this->getCacheFile($image, $transformations);
             if (!$file->exists()) {
                 $httpClient = $this->dependencyInjector->get('ride\\library\\http\\client\\Client');
 
@@ -120,7 +123,7 @@ class ImageUrlGenerator implements LibImageUrlGenerator {
 
                 $file->write($response->getBody());
 
-                $this->applyTransformation($file, $transformation, $options);
+                $this->applyTransformations($file, $transformations);
                 $this->applyOptimization($file);
             }
         } else {
@@ -128,15 +131,19 @@ class ImageUrlGenerator implements LibImageUrlGenerator {
             $source = $this->lookupFile($image);
 
             $isPublicFile = strpos($source->getAbsolutePath(), $this->publicPath) === 0;
-            if (!$transformation && $isPublicFile) {
+            if (!$transformations && $isPublicFile) {
                 $file = $source;
             } else {
-                $file = $this->getCacheFile($source->getPath(), $transformation, $options);
+                if (!is_array($transformations)) {
+                    $transformations = array($transformations => $options);
+                }
+
+                $file = $this->getCacheFile($source->getPath(), $transformations);
                 if (!$file->exists() || $source->getModificationTime() > $file->getModificationTime()) {
                     $source->copy($file);
 
-                    if ($transformation) {
-                        $this->applyTransformation($file, $transformation, $options);
+                    if ($transformations) {
+                        $this->applyTransformations($file, $transformations);
                     }
 
                     $this->applyOptimization($file);
@@ -154,19 +161,22 @@ class ImageUrlGenerator implements LibImageUrlGenerator {
     /**
      * Applies the provided thumbnailer to the provided file
      * @param \ride\library\system\file\File $file File of the source image
-     * @param string $thumbnailer Name of the thumbnailer
-     * @param integer $width Width of the resulting image
-     * @param integer $height Height of the resulting image
+     * @param array $transformations Array with the name of the transformation
+     * as key and the options as value
      * @return null
      */
-    protected function applyTransformation(File $file, $transformation, array $options = null) {
-        $transformation = $this->dependencyInjector->get('ride\\library\\image\\transformation\\Transformation', $transformation);
+    protected function applyTransformations(File $file, array $transformations) {
         $imageFactory = $this->dependencyInjector->get('ride\\library\\image\\ImageFactory');
 
         $image = $imageFactory->createImage();
         $image->read($file);
 
-        $transformedImage = $transformation->transform($image, $options);
+        $transformedImage = $image;
+        foreach ($transformations as $transformation => $options) {
+            $transformation = $this->dependencyInjector->get('ride\\library\\image\\transformation\\Transformation', $transformation);
+            $transformedImage = $transformation->transform($transformedImage, $options);
+        }
+
         if ($transformedImage !== $image) {
             $transformedImage->write($file);
         }
@@ -185,16 +195,21 @@ class ImageUrlGenerator implements LibImageUrlGenerator {
     /**
      * Gets the cache file for the image source
      * @param string $source Source to get a cache file for (local path or URL)
-     * @param string $transformation Name of the transformation
-     * @param array $options Options for the transformation
+     * @param array $transformations Array with the name of the transformation
+     * as key and the options as value
      * @return \ride\library\system\file\File unique name for a source file, in
      * the cache directory, with the thumbnailer, width and height encoded into
      */
-    protected function getCacheFile($source, $transformation = null, array $options = null) {
-        $hash = $source . '-transformation=' . $transformation;
-        if ($options) {
-            foreach ($options as $key => $value) {
-                $hash .= '-' . $key . '=' . $value;
+    protected function getCacheFile($source, array $transformations = null) {
+        $hash = $source;
+        if ($transformations) {
+            foreach ($transformations as $transformation => $options) {
+                $hash .= '-transformation=' . $transformation;
+                if ($options) {
+                    foreach ($options as $key => $value) {
+                        $hash .= '-' . $key . '=' . $value;
+                    }
+                }
             }
         }
 
