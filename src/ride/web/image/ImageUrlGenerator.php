@@ -134,7 +134,7 @@ class ImageUrlGenerator implements LibImageUrlGenerator {
             if (!$transformations && $isPublicFile) {
                 $file = $source;
             } else {
-                if (!is_array($transformations)) {
+                if ($transformations && !is_array($transformations)) {
                     $transformations = array($transformations => $options);
                 }
 
