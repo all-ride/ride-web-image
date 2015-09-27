@@ -89,6 +89,16 @@ class ImageUrlGenerator implements LibImageUrlGenerator {
     }
 
     /**
+     * Clears all the generated images
+     * @return null
+     */
+    public function clearCache() {
+        if ($this->path->exists()) {
+            $this->path->delete();
+        }
+    }
+
+    /**
      * Generates a URL for the provided image.
      * @param string|\ride\library\system\file\File $image Path or File instance to the image
      * @param string|array $transformations Name of a transformation or an array
