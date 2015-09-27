@@ -10,7 +10,7 @@
         }
     ],
     "require": {
-        "ride/app": ">=0.4.0",
+        "ride/app": ">=0.7.0",
         "ride/app-image": ">=0.4.0",
         "ride/lib-image": ">=0.7.0",
         "ride/web": ">=0.2.0"
