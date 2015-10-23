@@ -176,6 +176,10 @@ class ImageUrlGenerator implements LibImageUrlGenerator {
      * @return null
      */
     protected function applyTransformations(File $file, array $transformations) {
+        if ($file->getExtension() == 'svg') {
+            return;
+        }
+
         $imageFactory = $this->dependencyInjector->get('ride\\library\\image\\ImageFactory');
 
         $image = $imageFactory->createImage();

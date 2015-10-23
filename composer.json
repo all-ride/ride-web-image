@@ -2,7 +2,7 @@
     "name": "ride/web-image",
     "description": "Image library integration for a Ride web application",
     "license": "MIT",
-    "version": "0.8.0",
+    "version": "0.8.1",
     "authors": [
         {
             "name": "Joris Vandeweerd",
