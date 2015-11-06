@@ -1,0 +1,2 @@
+cdn.url     URL of the CDN service used by the image URL generator
+cdn.path    Local path in public domain which is mapped to the CDN service

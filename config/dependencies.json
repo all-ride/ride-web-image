@@ -22,6 +22,30 @@
                             }
                         }
                     ]
+                },
+                {
+                    "method": "setCdnUrl",
+                    "arguments": [
+                        {
+                            "name": "cdnUrl",
+                            "type": "parameter",
+                            "properties": {
+                                "key": "cdn.url"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "method": "setCdnPath",
+                    "arguments": [
+                        {
+                            "name": "cdnPath",
+                            "type": "parameter",
+                            "properties": {
+                                "key": "cdn.path"
+                            }
+                        }
+                    ]
                 }
             ]
         }
