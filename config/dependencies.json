@@ -6,7 +6,7 @@
             "id": "image"
         },
         {
-            "interfaces": ["ride\\web\\cdn\\Cdn"],
+            "interfaces": ["ride\\web\\image\\cdn\\Cdn"],
             "class": "ride\\web\\image\\cdn\\NullCdn",
             "id": "null",
             "calls": [
@@ -26,7 +26,7 @@
             ]
         },
         {
-            "interfaces": ["ride\\web\\cdn\\Cdn"],
+            "interfaces": ["ride\\web\\image\\cdn\\Cdn"],
             "class": "ride\\web\\image\\cdn\\DomainCdn",
             "id": "domain",
             "calls": [

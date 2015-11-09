@@ -10,7 +10,7 @@ use ride\library\image\ImageUrlGenerator as LibImageUrlGenerator;
 use ride\library\system\file\browser\FileBrowser;
 use ride\library\system\file\File;
 
-use ride\web\cdn\Cdn;
+use ride\web\image\cdn\Cdn;
 
 /**
  * URL generator for images.
@@ -57,7 +57,7 @@ class ImageUrlGenerator implements LibImageUrlGenerator {
      * Constructs a image URL generator
      * @param \ride\library\system\file\browser\FileBrowser $fileBrowser
      * @param \ride\library\dependency\DependencyInjector $dependencyInjector
-     * @param \ride\web\image\cdn\Cdn $cdn 
+     * @param \ride\web\image\cdn\Cdn $cdn
      * @param string $path Relative path in the public directory to save the
      * processed images
      * @return null
@@ -167,7 +167,7 @@ class ImageUrlGenerator implements LibImageUrlGenerator {
 
         // make the resulting image relative to the public directory
         $image = str_replace($this->publicPath, '', $file->getAbsolutePath());
-        
+
         return $this->cdn->getUrl($image);
     }
 
