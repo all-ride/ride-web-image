@@ -10,6 +10,8 @@ use ride\library\image\ImageUrlGenerator as LibImageUrlGenerator;
 use ride\library\system\file\browser\FileBrowser;
 use ride\library\system\file\File;
 
+use ride\web\cdn\Cdn;
+
 /**
  * URL generator for images.
  */
@@ -34,10 +36,10 @@ class ImageUrlGenerator implements LibImageUrlGenerator {
     private $dependencyInjector;
 
     /**
-     * Base URL for the images
-     * @var string
+     * CDN to get the URL for a path
+     * @var \ride\web\image\cdn\Cdn
      */
-    private $baseUrl;
+    private $cdn;
 
     /**
      * Absolute path of the public directory
@@ -54,14 +56,16 @@ class ImageUrlGenerator implements LibImageUrlGenerator {
     /**
      * Constructs a image URL generator
      * @param \ride\library\system\file\browser\FileBrowser $fileBrowser
+     * @param \ride\library\dependency\DependencyInjector $dependencyInjector
+     * @param \ride\web\image\cdn\Cdn $cdn 
      * @param string $path Relative path in the public directory to save the
      * processed images
      * @return null
      */
-    public function __construct(FileBrowser $fileBrowser, DependencyInjector $dependencyInjector, $baseUrl, $path = null) {
+    public function __construct(FileBrowser $fileBrowser, DependencyInjector $dependencyInjector, Cdn $cdn, $path = null) {
         $this->fileBrowser = $fileBrowser;
         $this->dependencyInjector = $dependencyInjector;
-        $this->baseUrl = $baseUrl;
+        $this->cdn = $cdn;
         $this->publicPath = $fileBrowser->getPublicDirectory()->getAbsolutePath();
 
         $this->setPath($path);
@@ -78,40 +82,6 @@ class ImageUrlGenerator implements LibImageUrlGenerator {
         }
 
         $this->path = $this->fileBrowser->getPublicDirectory()->getChild($path);
-    }
-
-    /**
-     * Sets the CDN URL
-     * @param string $cdnUrl
-     * @return null
-     */
-    public function setCdnUrl($cdnUrl) {
-        $this->cdnUrl = $cdnUrl;
-    }
-
-    /**
-     * Gets the CDN URL
-     * @return string|null
-     */
-    public function getCdnUrl() {
-        return $this->cdnUrl;
-    }
-
-    /**
-     * Sets the path which is mapped to the CDN URL
-     * @param string $cdnPath
-     * @return null
-     */
-    public function setCdnPath($cdnPath) {
-        $this->cdnPath = $cdnPath;
-    }
-
-    /**
-     * Gets the path which is mapped to the CDN URL
-     * @return string|null
-     */
-    public function getCdnPath() {
-        return $this->cdnPath;
     }
 
     /**
@@ -197,19 +167,8 @@ class ImageUrlGenerator implements LibImageUrlGenerator {
 
         // make the resulting image relative to the public directory
         $image = str_replace($this->publicPath, '', $file->getAbsolutePath());
-
-        if ($this->cdnUrl) {
-            if ($this->cdnPath && strpos($image, $this->cdnPath) === 0) {
-                $image = substr($image, strlen($this->cdnPath));
-            }
-
-            $image = $this->cdnUrl . $image;
-        } else {
-            // return the full URL
-            $image = $this->baseUrl . $image;
-        }
-
-        return $image;
+        
+        return $this->cdn->getUrl($image);
     }
 
     /**

@@ -6,9 +6,9 @@
             "id": "image"
         },
         {
-            "interfaces": ["ride\\library\\image\\ImageUrlGenerator", "ride\\web\\image\\ImageUrlGenerator"],
-            "class": "ride\\web\\image\\ImageUrlGenerator",
-            "id": "web",
+            "interfaces": ["ride\\web\\cdn\\Cdn"],
+            "class": "ride\\web\\image\\cdn\\NullCdn",
+            "id": "null",
             "calls": [
                 {
                     "method": "__construct",
@@ -22,27 +22,49 @@
                             }
                         }
                     ]
-                },
+                }
+            ]
+        },
+        {
+            "interfaces": ["ride\\web\\cdn\\Cdn"],
+            "class": "ride\\web\\image\\cdn\\DomainCdn",
+            "id": "domain",
+            "calls": [
                 {
-                    "method": "setCdnUrl",
+                    "method": "__construct",
                     "arguments": [
                         {
-                            "name": "cdnUrl",
+                            "name": "baseUrl",
                             "type": "parameter",
                             "properties": {
                                 "key": "cdn.url"
                             }
-                        }
-                    ]
-                },
-                {
-                    "method": "setCdnPath",
-                    "arguments": [
+                        },
                         {
-                            "name": "cdnPath",
+                            "name": "path",
                             "type": "parameter",
                             "properties": {
                                 "key": "cdn.path"
+                            }
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "interfaces": ["ride\\library\\image\\ImageUrlGenerator", "ride\\web\\image\\ImageUrlGenerator"],
+            "class": "ride\\web\\image\\ImageUrlGenerator",
+            "id": "web",
+            "calls": [
+                {
+                    "method": "__construct",
+                    "arguments": [
+                        {
+                            "name": "cdn",
+                            "type": "dependency",
+                            "properties": {
+                                "interface": "ride\\web\\image\\cdn\\Cdn",
+                                "id": "%system.cdn|null%"
                             }
                         }
                     ]

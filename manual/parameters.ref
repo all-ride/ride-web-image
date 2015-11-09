@@ -1,2 +1,3 @@
-cdn.url     URL of the CDN service used by the image URL generator
+cdn.url     URL (or an array of URL's) of the CDN service used by the image URL generator
 cdn.path    Local path in public domain which is mapped to the CDN service
+system.cdn  Name of the CDN dependency, defaults to null
