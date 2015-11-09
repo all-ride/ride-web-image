@@ -39,8 +39,8 @@ class ImageCacheControl extends AbstractCacheControl {
     }
 
     /**
-	 * Clears this cache
-	 * @return null
+     * Clears this cache
+     * @return null
      */
     public function clear() {
         $this->imageUrlGenerator->clearCache();
