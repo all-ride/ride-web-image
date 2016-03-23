@@ -7,6 +7,7 @@ use ride\library\http\Header;
 use ride\library\http\Response;
 use ride\library\image\exception\ImageException;
 use ride\library\image\ImageUrlGenerator as LibImageUrlGenerator;
+use ride\library\log\Log;
 use ride\library\system\file\browser\FileBrowser;
 use ride\library\system\file\File;
 
@@ -52,6 +53,11 @@ class ImageUrlGenerator implements LibImageUrlGenerator {
      * @var \ride\library\system\file\File
      */
     private $path;
+    /**
+     * Log instance
+     * @var \ride\library\log\Log
+     */
+    private $log;
 
     /**
      * Constructs a image URL generator
@@ -62,9 +68,10 @@ class ImageUrlGenerator implements LibImageUrlGenerator {
      * processed images
      * @return null
      */
-    public function __construct(FileBrowser $fileBrowser, DependencyInjector $dependencyInjector, Cdn $cdn, $path = null) {
+    public function __construct(FileBrowser $fileBrowser, Log $log, DependencyInjector $dependencyInjector, Cdn $cdn, $path = null) {
         $this->fileBrowser = $fileBrowser;
         $this->dependencyInjector = $dependencyInjector;
+        $this->log = $log;
         $this->cdn = $cdn;
         $this->publicPath = $fileBrowser->getPublicDirectory()->getAbsolutePath();
 
@@ -143,25 +150,29 @@ class ImageUrlGenerator implements LibImageUrlGenerator {
         } else {
             // image is a local file
             $source = $this->lookupFile($image);
-
-            $isPublicFile = strpos($source->getAbsolutePath(), $this->publicPath) === 0;
-            if (!$transformations && $isPublicFile) {
-                $file = $source;
-            } else {
-                if ($transformations && !is_array($transformations)) {
-                    $transformations = array($transformations => $options);
-                }
-
-                $file = $this->getCacheFile($source->getPath(), $transformations);
-                if (!$file->exists() || $source->getModificationTime() > $file->getModificationTime()) {
-                    $source->copy($file);
-
-                    if ($transformations) {
-                        $this->applyTransformations($file, $transformations);
+            if ($source) {
+                $isPublicFile = strpos($source->getAbsolutePath(), $this->publicPath) === 0;
+                if (!$transformations && $isPublicFile) {
+                    $file = $source;
+                } else {
+                    if ($transformations && !is_array($transformations)) {
+                        $transformations = array($transformations => $options);
                     }
 
-                    $this->applyOptimization($file);
+                    $file = $this->getCacheFile($source->getPath(), $transformations);
+                    if (!$file->exists() || $source->getModificationTime() > $file->getModificationTime()) {
+                        $source->copy($file);
+
+                        if ($transformations) {
+                            $this->applyTransformations($file, $transformations);
+                        }
+
+                        $this->applyOptimization($file);
+                    }
                 }
+
+            } else {
+                return false;
             }
         }
 
@@ -274,7 +285,9 @@ class ImageUrlGenerator implements LibImageUrlGenerator {
             return $file;
         }
 
-        throw new ImageException('Could not generate URL for ' . $source . ': file not found');
+        $this->log->logError('FILE NOT FOUND', 'Could not generate URL for ' . $source . ': file not found');
+
+        return false;
     }
 
 }
