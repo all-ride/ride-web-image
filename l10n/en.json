@@ -1,0 +1,6 @@
+{
+    "label.image.transformation.flip": "Flip",
+    "label.image.transformation.blur": "Blur",
+    "label.image.transformation.grayscale": "Grayscale",
+    "label.image.transformation.watermark": "Watermark"
+}
