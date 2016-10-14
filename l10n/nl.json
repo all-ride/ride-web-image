@@ -1,0 +1,6 @@
+{
+    "label.image.transformation.flip": "Omdraaien",
+    "label.image.transformation.blur": "Vervagen",
+    "label.image.transformation.grayscale": "Grijstinten",
+    "label.image.transformation.watermark": "Watermerk"
+}
